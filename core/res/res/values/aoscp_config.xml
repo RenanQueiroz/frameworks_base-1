@@ -85,9 +85,6 @@
     <integer name="config_longPressOnCameraKeyBehavior">0</integer>
     <integer name="config_doubleTapOnCameraKeyBehavior">0</integer>
 
-    <!-- Internal default to navigation bar value -->
-    <bool name="config_defaultToNavigationBar">true</bool>
-
     <!-- Is the battery LED intrusive? Used to decide if there should be a disable option -->
     <bool name="config_intrusiveBatteryLed">false</bool>
 
@@ -217,4 +214,10 @@
 
     <!-- Whether device has turbo power charging support -->
     <bool name="config_hasTurboPowerCharger">false</bool>
+
+    <!-- Path to the library that contains a device specific key handler -->
+    <string name="config_deviceKeyHandlerLib" translatable="false"></string>
+
+    <!-- Name of that key handler class -->
+    <string name="config_deviceKeyHandlerClass" translatable="false"></string>
 </resources>

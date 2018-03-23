@@ -55,9 +55,6 @@
     <java-symbol type="integer" name="config_longPressOnAssistKeyBehavior" />
     <java-symbol type="integer" name="config_longPressOnAppSwitchKeyBehavior" />
     <java-symbol type="integer" name="config_longPressOnCameraKeyBehavior" />
-
-    <!-- Internal default to navigation bar value -->
-    <java-symbol type="bool" name="config_defaultToNavigationBar" />
   
     <java-symbol type="drawable" name="ic_audio_notification_new" />
     <java-symbol type="drawable" name="ic_audio_notification_mute_new" />
@@ -156,4 +153,8 @@
 
     <!-- Whether device has turbo power charging support -->
     <java-symbol type="bool" name="config_hasTurboPowerCharger" />
+
+    <!-- Device Keyhandler -->
+    <java-symbol type="string" name="config_deviceKeyHandlerLib" />
+    <java-symbol type="string" name="config_deviceKeyHandlerClass" />
 </resources>

@@ -580,15 +580,15 @@ public class StatusBar extends SystemUI implements DemoMode,
         @Override
         public void onChange(boolean selfChange) {
             final Configuration newConfiguration = new Configuration();
-            boolean wasUsing = mUseNavBar;
-            boolean defaultToNavigationBar = mContext.getResources()
-                    .getBoolean(com.android.internal.R.bool.config_defaultToNavigationBar);
-            mUseNavBar = Settings.System.getIntForUser(
-                    mContext.getContentResolver(), Settings.System.NAVIGATION_BAR_ENABLED,
-                    defaultToNavigationBar ? 1 : 0, UserHandle.USER_CURRENT) != 0;
-            Log.d(TAG, "navbar is " + (mUseNavBar ? "enabled" : "disabled"));
-            if (wasUsing != mUseNavBar) {
-                setNavBarEnabled(mUseNavBar);
+            int mUseNavBar = Settings.System.getIntForUser(
+            mContext.getContentResolver(), Settings.System.NAVIGATION_BAR_ENABLED, 0, mCurrentUserId);
+            if (mUseNavBar == 1) {
+                setNavBarEnabled(true);
+                if (mAssistManager != null) {
+                    mAssistManager.onConfigurationChanged(newConfiguration);
+                }
+            } else {
+                setNavBarEnabled(false);
                 if (mAssistManager != null) {
                     mAssistManager.onConfigurationChanged(newConfiguration);
                 }
@@ -1062,7 +1062,7 @@ public class StatusBar extends SystemUI implements DemoMode,
 
         mFlashlightController = Dependency.get(FlashlightController.class);
 
-        startAmbientPlayListener();
+        updateAmbientPlayState();
 
         mWeatherClient = new OmniJawsClient(mContext);
         mWeatherEnabled = mWeatherClient.isOmniJawsEnabled();
@@ -1446,11 +1446,27 @@ public class StatusBar extends SystemUI implements DemoMode,
         }
     }
 
+    private void updateAmbientPlayState() {
+        int mAmbientPlay = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+                    Settings.Secure.AMBIENT_PLAY, 1, mCurrentUserId);
+        boolean mAmbientPlaySupported = mContext.getResources().getBoolean(
+                    com.android.internal.R.bool.config_supportAmbientPlay);
+        if (mAmbientPlay != 0 && mAmbientPlaySupported) {
+            startAmbientPlayRecognition();
+        } else {
+            /** 
+             * If recognition is disabled, then we check if the thread is running. 
+             * If so, interrupt it and stop the recording process. 
+             */
+            stopAmbientPlayRecognition();
+        }
+    }
+
     private Runnable mStartRecognition = new Runnable() {
         @Override
         public void run() {
             Log.v(TAG, "Will start listening again in 60 seconds");
-            startAmbientPlayListener();
+            updateAmbientPlayState();
         }
     };
 
@@ -1461,16 +1477,15 @@ public class StatusBar extends SystemUI implements DemoMode,
         }
     };
 
-    private void startAmbientPlayListener() {
-        int mAmbientPlay = Settings.Secure.getIntForUser(mContext.getContentResolver(),
-                    Settings.Secure.AMBIENT_PLAY, 1, mCurrentUserId);
-        boolean mAmbientPlaySupported = mContext.getResources().getBoolean(
-                    com.android.internal.R.bool.config_supportAmbientPlay);
+    private void startAmbientPlayRecognition() {
         mRecognition = new AmbientPlayRecognition(StatusBar.this);
-        if (mAmbientPlay != 0 && mAmbientPlaySupported) {
-            mRecognition.startRecording();
-            mHandler.postDelayed(mStopRecognition, 19000);
-        }
+        mRecognition.startRecording();
+        mHandler.postDelayed(mStopRecognition, 19000);
+    }
+
+    private void stopAmbientPlayRecognition() {
+        mRecognition = new AmbientPlayRecognition(StatusBar.this);
+        mRecognition.stopRecording();
     }
 
     private Runnable mSetTrackInfo = new Runnable() {
@@ -6136,9 +6151,6 @@ public class StatusBar extends SystemUI implements DemoMode,
     protected boolean mHeadsUpTicker = false;
     protected boolean mDisableNotificationAlerts = false;
 
-    // Enable navigation bar.
-    protected boolean mUseNavBar = false;
-
     protected DevicePolicyManager mDevicePolicyManager;
     protected PowerManager mPowerManager;
     protected StatusBarKeyguardViewManager mStatusBarKeyguardViewManager;
@@ -6292,7 +6304,7 @@ public class StatusBar extends SystemUI implements DemoMode,
             if (mAmbientIndicationContainer instanceof AutoReinflateContainer) {
                 ((AutoReinflateContainer) mAmbientIndicationContainer).inflateLayout();
             }
-            startAmbientPlayListener();
+            updateAmbientPlayState();
         }
     }
 
